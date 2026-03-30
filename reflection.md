@@ -4,9 +4,20 @@
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+### Core User Actions
+1. Register an owner and their pet — The user enters basic 
+   information (owner name, pet name, species) to set up 
+   their profile in the app.
 
+2. Add and manage daily care tasks — The user creates tasks 
+   (e.g., morning walk, feeding, medication) with a duration 
+   in minutes and a priority level (low, medium, high).
+
+3. Generate and view a daily schedule — The user triggers the 
+   scheduler to produce an ordered daily care plan, including 
+   a brief explanation of why each task was selected and when 
+   it happens.
+   
 **b. Design changes**
 
 - Did your design change during implementation?
