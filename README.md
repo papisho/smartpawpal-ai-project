@@ -30,6 +30,7 @@ Your final app should:
 - Filtering by completion status, priority, and pet name for focused schedule views.
 - Daily and weekly recurrence that auto-creates the next task instance when a recurring task is completed.
 - Conflict warnings that flag duplicate task times (single-pet and multi-pet views) without crashing or blocking workflow.
+- Next available slot recommendation that scans existing scheduled intervals and suggests the earliest non-overlapping HH:MM start time.
 - Non-blocking scheduler behavior: warnings guide decisions while still allowing flexible planning.
 - Streamlit UI with table-based schedule display, success/warning feedback, and interactive filtering.
 - Automated test coverage for core algorithmic behavior: sorting correctness, recurrence creation, and conflict detection.
@@ -75,6 +76,23 @@ PawPal+ now includes intelligent scheduling algorithms that make task management
 - **Multi-Pet Detection** (`detect_conflicts_all_pets()`) — Highlights scheduling inefficiencies across household
 - **Pre-Flight Checks** (`check_conflicts_for_task()`) — Warns about conflicts before adding new tasks
 
+### 🧠 Advanced Capability: Next Available Slot
+- **Duration-Aware Slot Search** (`find_next_available_slot()`) — Suggests the earliest open start time for a new task within a configurable time window
+- **Interval Overlap Logic** — Uses each task's duration to avoid partial overlaps, not just exact-time matches
+- **UI Action** — Streamlit includes a "Find next available slot" action that returns a clear recommendation or a non-blocking warning
+
+## Agent Mode Implementation Notes
+
+Agent Mode was used to implement the advanced scheduling feature in an iterative, architecture-first workflow:
+
+1. Proposed candidate algorithms and selected **next available slot** because it extends current behavior beyond exact conflict checks.
+2. Implemented logic directly in the scheduler layer so UI and tests could reuse one source of truth.
+3. Added validation for invalid time windows and non-positive durations to keep runtime behavior predictable.
+4. Integrated the method into Streamlit with `st.success` / `st.warning` feedback for user-friendly outcomes.
+5. Added automated tests for both success and no-slot cases before finalizing docs.
+
+This kept the design clean: algorithm in backend, presentation in UI, and confidence via tests.
+
 ### 📊 Algorithm Design Philosophy
 These algorithms prioritize **clarity and simplicity** for educational value:
 - Exact time matching (HH:MM) rather than duration-based overlap detection
@@ -103,3 +121,7 @@ Confidence Level: 5/5 stars based on consistently passing test runs.
 Final Streamlit app screenshot:
 
 ![PawPal+ Streamlit Demo](Screenshot.png)
+
+Updated app screenshot after adding advanced features (challenge 1 and 3):
+
+![PawPal+ Streamlit Demo (Advanced Features)](Screenshot(2).png)

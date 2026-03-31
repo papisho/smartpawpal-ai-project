@@ -301,12 +301,41 @@ class Scheduler:
         self.pet = pet
         self.schedule: List[Task] = []
 
+    @staticmethod
+    def _to_minutes(time_str: str) -> Optional[int]:
+        """Convert HH:MM to minutes since midnight; return None for invalid values."""
+        try:
+            hours, minutes = map(int, time_str.split(":"))
+            if not (0 <= hours <= 23 and 0 <= minutes <= 59):
+                return None
+            return hours * 60 + minutes
+        except (ValueError, AttributeError):
+            return None
+
+    @staticmethod
+    def _to_hhmm(total_minutes: int) -> str:
+        """Convert minutes since midnight to HH:MM format."""
+        hours = total_minutes // 60
+        minutes = total_minutes % 60
+        return f"{hours:02d}:{minutes:02d}"
+
     def sort_by_priority(self) -> List[Task]:
-        """Return tasks sorted by priority and then by time-of-day order."""
-        return sorted(
-            self.pet.get_tasks(),
-            key=lambda t: (PRIORITY_ORDER[t.priority], TIME_ORDER[t.time_of_day])
-        )
+        """
+        Return tasks sorted by priority first, then by HH:MM time.
+
+        Ordering rules:
+        - Priority: HIGH, then MEDIUM, then LOW
+        - Secondary key: earlier HH:MM time first
+        - Fallback for invalid/missing times: placed at end of same priority group
+        """
+
+        def sort_key(task: Task) -> tuple[int, int, int]:
+            priority_rank = PRIORITY_ORDER[task.priority]
+            minutes = self._to_minutes(task.time)
+            has_valid_time = 0 if minutes is not None else 1
+            return (priority_rank, has_valid_time, minutes if minutes is not None else 24 * 60)
+
+        return sorted(self.pet.get_tasks(), key=sort_key)
 
     def sort_by_time(self) -> List[Task]:
         """
@@ -367,6 +396,74 @@ class Scheduler:
             >>> urgent = scheduler.filter_by_priority(Priority.HIGH)
         """
         return [task for task in self.pet.get_tasks() if task.priority == priority]
+
+    def find_next_available_slot(
+        self,
+        duration_minutes: int,
+        start_time: str = "06:00",
+        end_time: str = "22:00",
+        step_minutes: int = 15,
+    ) -> Optional[str]:
+        """
+        Find the earliest available time slot for a new task.
+
+        This advanced scheduler capability scans existing tasks as occupied time
+        intervals and returns the first HH:MM slot that can fit a new task
+        duration without overlap. It is more expressive than exact-time conflict
+        matching because it uses task durations to avoid partial overlaps.
+
+        Args:
+            duration_minutes (int): Required duration for the new task.
+            start_time (str): Start of search window in HH:MM.
+            end_time (str): End of search window in HH:MM.
+            step_minutes (int): Search granularity in minutes (default 15).
+
+        Returns:
+            Optional[str]: Earliest available HH:MM slot, or None if no slot fits.
+
+        Example:
+            >>> scheduler.find_next_available_slot(duration_minutes=20)
+            '09:30'
+        """
+        if duration_minutes <= 0:
+            raise ValueError("duration_minutes must be greater than 0")
+        if step_minutes <= 0:
+            raise ValueError("step_minutes must be greater than 0")
+
+        start_minutes = self._to_minutes(start_time)
+        end_minutes = self._to_minutes(end_time)
+        if start_minutes is None or end_minutes is None:
+            raise ValueError("start_time and end_time must be valid HH:MM")
+        if start_minutes >= end_minutes:
+            raise ValueError("start_time must be earlier than end_time")
+
+        # Build occupied intervals from existing tasks with specific times.
+        occupied = []
+        for task in self.pet.get_tasks():
+            if task.time == "00:00":
+                continue
+            task_start = self._to_minutes(task.time)
+            if task_start is None:
+                continue
+            task_end = task_start + task.duration_minutes
+            occupied.append((task_start, task_end))
+
+        occupied.sort(key=lambda interval: interval[0])
+
+        candidate = start_minutes
+        latest_start = end_minutes - duration_minutes
+
+        while candidate <= latest_start:
+            candidate_end = candidate + duration_minutes
+            overlaps = any(
+                candidate < existing_end and candidate_end > existing_start
+                for existing_start, existing_end in occupied
+            )
+            if not overlaps:
+                return self._to_hhmm(candidate)
+            candidate += step_minutes
+
+        return None
 
     def detect_conflicts(self) -> List[str]:
         """
@@ -449,7 +546,7 @@ class Scheduler:
         return conflicts
 
     def generate_schedule(self) -> List[Task]:
-        """Build and return an ordered daily schedule for the pet."""
+        """Build and return an ordered daily schedule (priority first, then time)."""
         self.schedule = self.sort_by_priority()
         return self.schedule
 

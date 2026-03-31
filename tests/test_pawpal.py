@@ -46,6 +46,25 @@ def test_sorting_correctness_returns_chronological_order():
     assert [task.time for task in sorted_tasks] == ["07:15", "12:00", "18:30"]
 
 
+def test_priority_sort_orders_by_priority_then_time():
+    """Priority scheduling: HIGH before MEDIUM before LOW, then HH:MM within each level."""
+    pet = Pet(name="Mochi", species="cat", age=3)
+    pet.add_task(Task("Low early", 10, Priority.LOW, time="06:00"))
+    pet.add_task(Task("High later", 10, Priority.HIGH, time="08:00"))
+    pet.add_task(Task("High earlier", 10, Priority.HIGH, time="07:00"))
+    pet.add_task(Task("Medium mid", 10, Priority.MEDIUM, time="07:30"))
+
+    scheduler = Scheduler(pet)
+    sorted_tasks = scheduler.sort_by_priority()
+
+    assert [task.title for task in sorted_tasks] == [
+        "High earlier",
+        "High later",
+        "Medium mid",
+        "Low early",
+    ]
+
+
 def test_recurrence_logic_daily_completion_creates_next_day_task():
     """Recurrence Logic: completing a daily task should create the next day's task."""
     pet = Pet(name="Rex", species="dog", age=5)
@@ -84,3 +103,38 @@ def test_conflict_detection_flags_duplicate_times():
 
     assert len(conflicts) == 1
     assert "CONFLICT at 07:00" in conflicts[0]
+
+
+def test_next_available_slot_finds_earliest_non_overlapping_time():
+    """Advanced capability: find next free slot using duration-aware overlap checks."""
+    pet = Pet(name="Nova", species="dog", age=2)
+    pet.add_task(Task("Breakfast", 30, Priority.HIGH, time="07:00"))
+    pet.add_task(Task("Medication", 20, Priority.MEDIUM, time="08:00"))
+
+    scheduler = Scheduler(pet)
+    slot = scheduler.find_next_available_slot(
+        duration_minutes=20,
+        start_time="07:00",
+        end_time="09:00",
+        step_minutes=10,
+    )
+
+    assert slot == "07:30"
+
+
+def test_next_available_slot_returns_none_when_window_is_full():
+    """Advanced capability: returns None when no valid slot exists in the window."""
+    pet = Pet(name="Luna", species="cat", age=4)
+    pet.add_task(Task("Task A", 30, Priority.HIGH, time="07:00"))
+    pet.add_task(Task("Task B", 30, Priority.MEDIUM, time="07:30"))
+    pet.add_task(Task("Task C", 30, Priority.LOW, time="08:00"))
+
+    scheduler = Scheduler(pet)
+    slot = scheduler.find_next_available_slot(
+        duration_minutes=20,
+        start_time="07:00",
+        end_time="08:30",
+        step_minutes=10,
+    )
+
+    assert slot is None

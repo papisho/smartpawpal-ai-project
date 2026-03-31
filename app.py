@@ -18,6 +18,16 @@ def _priority_from_str(priority_str: str) -> Priority:
     return mapping[priority_str]
 
 
+def _priority_badge(priority: Priority) -> str:
+    """Return an emoji-enhanced label for priority visibility in the UI."""
+    badges = {
+        Priority.HIGH: "🔴 High",
+        Priority.MEDIUM: "🟡 Medium",
+        Priority.LOW: "🟢 Low",
+    }
+    return badges[priority]
+
+
 def _restore_state(owner_name: str):
     """Rebuild domain objects from Streamlit session state for each rerun."""
     owner = Owner(name=owner_name)
@@ -170,7 +180,7 @@ else:
             ["time", "priority", "none"],
             format_func=lambda x: {
                 "time": "Time (chronological)",
-                "priority": "Priority",
+                "priority": "Priority then time",
                 "none": "No sorting",
             }[x],
         )
@@ -200,7 +210,7 @@ else:
             "Task": task.title,
             "Time": task.time,
             "Duration (min)": task.duration_minutes,
-            "Priority": task.priority.value,
+            "Priority": _priority_badge(task.priority),
             "Status": "Completed" if task.completed else "Pending",
             "Frequency": task.frequency,
             "Due date": task.due_date.strftime("%Y-%m-%d"),
@@ -236,6 +246,41 @@ else:
         with st.expander("Household-wide scheduling notes"):
             for conflict in all_conflicts:
                 st.write(f"- {conflict}")
+
+    st.markdown("### Advanced: Next Available Slot")
+    slot_col1, slot_col2, slot_col3 = st.columns(3)
+    with slot_col1:
+        requested_duration = st.number_input(
+            "Requested duration (minutes)",
+            min_value=5,
+            max_value=240,
+            value=30,
+            step=5,
+        )
+    with slot_col2:
+        window_start = st.text_input("Window start (HH:MM)", value="06:00")
+    with slot_col3:
+        window_end = st.text_input("Window end (HH:MM)", value="22:00")
+
+    if st.button("Find next available slot"):
+        try:
+            slot = scheduler.find_next_available_slot(
+                duration_minutes=int(requested_duration),
+                start_time=window_start,
+                end_time=window_end,
+                step_minutes=15,
+            )
+            if slot:
+                st.success(
+                    f"Suggested start time for a {requested_duration}-minute task: {slot}"
+                )
+            else:
+                st.warning(
+                    "No open slot found in this window. "
+                    "Try a shorter duration or widen the search window."
+                )
+        except ValueError as ex:
+            st.error(f"Could not search for slot: {ex}")
 
     st.markdown("### Complete Task (with recurrence)")
     pending_tasks = [task for task in selected_pet.get_tasks() if not task.completed]
