@@ -41,3 +41,32 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+## Smarter Scheduling (Phase 4: Algorithmic Layer)
+
+PawPal+ now includes intelligent scheduling algorithms that make task management more efficient:
+
+### ✨ Sorting & Filtering
+- **Chronological Sorting** (`sort_by_time()`) — Organize tasks by time of day (HH:MM format)
+- **Status Filtering** — Separate completed tasks from pending ones
+- **Priority Filtering** — Isolate high-priority tasks for quick review
+- **Pet-Specific Filtering** — View tasks for individual pets or combined household view
+
+### 🔄 Automatic Recurring Tasks
+- **Daily & Weekly Recurrence** — Mark a task complete to auto-generate tomorrow's or next week's instance
+- **Smart Date Calculation** — Uses Python's `timedelta` for accurate date math (`today + 1 day` or `today + 1 week`)
+- **Task History** — Completed tasks remain in history while new instances are created
+
+### ⚠️ Conflict Detection
+- **Lightweight Strategy** — Identifies tasks scheduled at the same time without blocking operations
+- **Single-Pet Detection** (`detect_conflicts()`) — Finds overlapping tasks for one pet
+- **Multi-Pet Detection** (`detect_conflicts_all_pets()`) — Highlights scheduling inefficiencies across household
+- **Pre-Flight Checks** (`check_conflicts_for_task()`) — Warns about conflicts before adding new tasks
+
+### 📊 Algorithm Design Philosophy
+These algorithms prioritize **clarity and simplicity** for educational value:
+- Exact time matching (HH:MM) rather than duration-based overlap detection
+- Clear variable naming and logical flow over extreme optimization
+- Non-blocking warnings to maintain user control and flexibility
+
+See [PHASE4_STEP5_ANALYSIS.md](PHASE4_STEP5_ANALYSIS.md) for algorithm tradeoff discussions and design rationale.

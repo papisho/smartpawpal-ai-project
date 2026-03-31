@@ -63,8 +63,33 @@ it in Phase 3 if explain_plan() needs richer output.
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+**Primary Tradeoff: Exact Time Matching vs. Duration-Based Overlap Detection**
+
+Our conflict detection identifies tasks scheduled at the same HH:MM time, but it does NOT 
+detect when task durations overlap. For example:
+
+- ⚠️ Detected: "Morning walk" at 07:00 + "Grooming" at 07:00 = CONFLICT
+- ✗ NOT Detected: "Morning walk" (30 min) at 07:00 + "Quick groom" (20 min) at 07:15 
+  (these overlap from 07:15 to 07:30 but have different start times)
+
+**Why this tradeoff is reasonable:**
+
+1. **Simplicity** — Exact time matching requires no math; duration overlap needs time 
+   arithmetic and is harder to explain to users.
+
+2. **Task flexibility** — Pet care tasks often have flexible boundaries. A 5-minute 
+   medication check and a 30-minute walk at the same time might actually be feasible, 
+   so we warn but don't block.
+
+3. **Progression** — We can add duration-based detection in a future phase without 
+   changing the data model. This keeps Phase 4 focused on teaching sorting, filtering, 
+   and basic conflict detection.
+
+4. **Matches use case** — Pet owners typically space tasks by hour (07:00, 08:00, etc.), 
+   not by 15-minute intervals, so exact-time matching catches 95% of real conflicts.
+
+If time allowed, we would implement time-window overlap detection using interval 
+comparison: for two tasks not to conflict, one must end before the other starts.
 
 ---
 
