@@ -1,0 +1,66 @@
+classDiagram
+    class Priority {
+        <<enumeration>>
+        LOW
+        MEDIUM
+        HIGH
+    }
+
+    class Task {
+        +str title
+        +int duration_minutes
+        +Priority priority
+        +bool recurring
+        +str time_of_day
+        +str time
+        +bool completed
+        +str frequency
+        +datetime due_date
+        +__post_init__()
+        +is_high_priority() bool
+        +mark_complete() None
+        +create_next_occurrence() Task
+        +__repr__() str
+    }
+
+    class Pet {
+        +str name
+        +str species
+        +int age
+        +List~Task~ tasks
+        +__post_init__()
+        +add_task(task) None
+        +get_tasks() List~Task~
+    }
+
+    class Owner {
+        +str name
+        +List~Pet~ pets
+        +add_pet(pet) None
+        +get_pets() List~Pet~
+        +get_all_tasks() List~Task~
+        +filter_by_pet_name(pet_name) List~Task~
+        +filter_by_completion_status(completed) List~Task~
+        +filter_tasks_by_pet_and_status(pet_name, completed) List~Task~
+        +detect_conflicts_all_pets() List~str~
+    }
+
+    class Scheduler {
+        +Pet pet
+        +List~Task~ schedule
+        +sort_by_priority() List~Task~
+        +sort_by_time() List~Task~
+        +filter_by_completion_status(completed) List~Task~
+        +filter_by_priority(priority) List~Task~
+        +detect_conflicts() List~str~
+        +check_conflicts_for_task(task) List~str~
+        +generate_schedule() List~Task~
+        +mark_task_complete_with_recurrence(task) Task
+        +explain_plan() str
+    }
+
+    Owner "1" --> "0..*" Pet : has
+    Pet "1" --> "0..*" Task : has
+    Scheduler --> "1" Pet : schedules
+    Scheduler ..> Task : reads/updates
+    Task --> Priority : uses

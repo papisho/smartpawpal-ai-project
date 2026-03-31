@@ -22,6 +22,18 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## Features
+
+- Owner and pet management with support for multiple pets in one household.
+- Task scheduling with title, duration, priority, time, completion status, and recurrence settings.
+- Sorting by time using HH:MM values for chronological daily planning.
+- Filtering by completion status, priority, and pet name for focused schedule views.
+- Daily and weekly recurrence that auto-creates the next task instance when a recurring task is completed.
+- Conflict warnings that flag duplicate task times (single-pet and multi-pet views) without crashing or blocking workflow.
+- Non-blocking scheduler behavior: warnings guide decisions while still allowing flexible planning.
+- Streamlit UI with table-based schedule display, success/warning feedback, and interactive filtering.
+- Automated test coverage for core algorithmic behavior: sorting correctness, recurrence creation, and conflict detection.
+
 ## Getting started
 
 ### Setup
@@ -85,3 +97,9 @@ Current tests cover the most important algorithmic behaviors:
 - Conflict detection: verifies duplicate task times are flagged with warning messages.
 
 Confidence Level: 5/5 stars based on consistently passing test runs.
+
+## 📸 Demo
+
+Final Streamlit app screenshot:
+
+![PawPal+ Streamlit Demo](Screenshot.png)
