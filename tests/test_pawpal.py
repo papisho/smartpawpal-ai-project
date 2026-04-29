@@ -65,6 +65,14 @@ def test_priority_sort_orders_by_priority_then_time():
     ]
 
 
+def test_task_accepts_string_priority_and_normalizes_to_enum():
+    """Task creation should accept the Streamlit string priority values."""
+    task = Task("Morning walk", 20, "high", time_of_day="morning")
+
+    assert task.priority == Priority.HIGH
+    assert task.is_high_priority() is True
+
+
 def test_recurrence_logic_daily_completion_creates_next_day_task():
     """Recurrence Logic: completing a daily task should create the next day's task."""
     pet = Pet(name="Rex", species="dog", age=5)

@@ -21,7 +21,7 @@ class Priority(Enum):
 class Task:
     title: str
     duration_minutes: int
-    priority: Priority
+    priority: Priority | str
     recurring: bool = False
     time_of_day: str = "anytime"
     time: str = "00:00"  # Specific time in HH:MM format
@@ -31,6 +31,18 @@ class Task:
 
     def __post_init__(self):
         """Validate task duration and time-of-day values after initialization."""
+        if isinstance(self.priority, str):
+            normalized_priority = self.priority.strip().lower()
+            try:
+                self.priority = Priority(normalized_priority)
+            except ValueError as exc:
+                valid_priorities = {priority.value for priority in Priority}
+                raise ValueError(
+                    f"priority must be one of {valid_priorities}, got {self.priority}"
+                ) from exc
+        elif not isinstance(self.priority, Priority):
+            raise TypeError("priority must be a Priority enum or a valid priority string")
+
         if self.duration_minutes <= 0:
             raise ValueError("duration_minutes must be greater than 0")
         valid_times = {"morning", "afternoon", "evening", "anytime"}
