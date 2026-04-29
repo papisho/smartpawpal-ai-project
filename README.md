@@ -27,9 +27,14 @@ This final project adds an AI Care Advisor powered by the Anthropic Claude API. 
 
 ## Sample Interactions
 
-- Example 1: Mochi, 3-year-old cat, breakfast (high/morning) + playtime (medium/afternoon) -> no conflicts, AI gives hydration and enrichment tips
-- Example 2: Rex, 5-year-old dog, morning walk (high/morning) + medication (high/morning) -> conflict warning for two morning tasks, AI flags the scheduling issue
-- Example 3: Buddy, 1-year-old dog, feeding (high/morning) + training (medium/afternoon) + evening walk (low/evening) -> no conflicts, AI notes puppies need mental stimulation
+- Example 1: Mochi 3-year-old cat
+
+![Mochi](assets/mochi.gif)
+
+- Example 2: Buddy, 5-year-old dog
+ 
+![Buddy](assets/buddy.gif)
+
 
 ## Design Decisions
 

@@ -199,3 +199,25 @@ My key takeaway is that AI is most powerful when the human remains the lead arch
 Copilot accelerated drafting and iteration, but I had to define constraints, reject overly clever
 patterns when they hurt clarity, and decide which tradeoffs fit the product goals. Good results
 came from treating AI as a fast collaborator, not an autopilot.
+
+---
+
+## 6. Ethics and Responsible AI
+
+**a. What are the limitations or biases in your system?**
+
+The AI advice is only as good as the task data the user enters, so incomplete or inaccurate pet information can lead to weaker recommendations. Claude may also give generic advice for unusual species or rare conditions because the system is not specialized for veterinary edge cases. The system has no memory of previous sessions, so it cannot learn from past conversations unless the user re-enters context.
+
+**b. Could your AI be misused, and how would you prevent that?**
+
+Yes, a user could enter misleading pet information to try to get very specific advice that does not match the real situation. The guardrail layer helps prevent harmful output by blocking unsafe or low-quality responses and falling back to a safer message. Even with these protections, the system should never replace a real veterinarian for medical decisions.
+
+**c. What surprised you while testing your AI's reliability?**
+
+I was surprised that the AI gave consistently specific and warm responses even for edge cases, which made the advice feel more stable than I expected. The biggest reliability issue was actually the priority type mismatch in the backend rather than the AI itself, because the model boundary had to align UI strings with the scheduler enum. During normal use, the guardrails were never triggered, which suggested the default responses were already behaving well.
+
+**d. AI Collaboration — one helpful and one flawed suggestion:**
+
+Helpful: Copilot correctly identified the priority type mismatch between the UI strings and the scheduler enum and fixed it at the model boundary.
+
+Flawed: Copilot initially generated the Mermaid diagram without the required flowchart TD declaration, causing a parse error in the live editor.
