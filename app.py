@@ -1,7 +1,7 @@
 
 import streamlit as st
 from pawpal_system import Owner, Pet, Task, Scheduler
-from ai_advisor import get_ai_advice
+from ai_advisor import get_ai_advice, get_ai_chat_reply
 
 st.set_page_config(page_title="PawPal+ AI", page_icon="🐾", layout="centered")
 
@@ -15,6 +15,12 @@ if "owner" not in st.session_state:
     st.session_state.owner = None
 if "ai_advice" not in st.session_state:
     st.session_state.ai_advice = {}
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = {}
+if "chat_enabled" not in st.session_state:
+    st.session_state.chat_enabled = {}
+if "schedule_summary" not in st.session_state:
+    st.session_state.schedule_summary = {}
 
 # ----------------------------
 # Owner Setup
@@ -26,6 +32,9 @@ owner_name = st.text_input("Owner name", value="Jordan")
 if st.button("Create Owner"):
     st.session_state.owner = Owner(name=owner_name)
     st.session_state.ai_advice = {}
+    st.session_state.chat_history = {}
+    st.session_state.chat_enabled = {}
+    st.session_state.schedule_summary = {}
     st.success(f"Owner '{owner_name}' created!")
 
 if st.session_state.owner is None:
@@ -139,11 +148,18 @@ if st.button("Generate Schedule"):
         schedule = scheduler.generate_schedule()
 
         st.markdown("### Rule-Based Schedule")
+        schedule_lines = []
         for i, task in enumerate(schedule, start=1):
             st.markdown(
                 f"{i}. **{task.title}** — {task.duration_minutes} min "
                 f"[{task.time_of_day}] ({task.priority.value} priority)"
             )
+            schedule_lines.append(
+                f"{i}. {task.title} - {task.duration_minutes} min "
+                f"[{task.time_of_day}] ({task.priority.value} priority)"
+            )
+
+        st.session_state.schedule_summary[selected_schedule_pet] = "\n".join(schedule_lines)
 
         conflicts = scheduler.detect_conflicts()
         if conflicts:
@@ -158,7 +174,45 @@ if st.button("Generate Schedule"):
         with st.spinner("Getting AI advice..."):
             advice = get_ai_advice(pet_obj)
             st.session_state.ai_advice[selected_schedule_pet] = advice
+            st.session_state.chat_history[selected_schedule_pet] = [
+                {"role": "assistant", "content": advice}
+            ]
+            st.session_state.chat_enabled[selected_schedule_pet] = True
 
 # Show stored AI advice
 if selected_schedule_pet in st.session_state.ai_advice:
     st.info(st.session_state.ai_advice[selected_schedule_pet])
+
+# ----------------------------
+# Follow-up Chat (Enabled only after first response)
+# ----------------------------
+chat_is_enabled = st.session_state.chat_enabled.get(selected_schedule_pet, False)
+
+if chat_is_enabled:
+    st.markdown("### 💬 Follow-up Questions")
+
+    history = st.session_state.chat_history.get(selected_schedule_pet, [])
+    for message in history:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    user_question = st.chat_input(
+        "Ask a follow-up question about this pet's schedule and care"
+    )
+
+    if user_question:
+        history.append({"role": "user", "content": user_question})
+
+        selected_pet_obj = next(p for p in current_pets if p.name == selected_schedule_pet)
+        summary = st.session_state.schedule_summary.get(selected_schedule_pet, "")
+
+        with st.spinner("Thinking..."):
+            reply = get_ai_chat_reply(
+                pet=selected_pet_obj,
+                schedule_summary=summary,
+                chat_history=history,
+            )
+
+        history.append({"role": "assistant", "content": reply})
+        st.session_state.chat_history[selected_schedule_pet] = history
+        st.rerun()
